@@ -127,6 +127,38 @@
   .toast{border-radius:10px;padding:12px 16px;min-width:220px;display:flex;align-items:center;gap:9px;font-size:13px;animation:tIn .2s ease;box-shadow:0 4px 16px rgba(0,0,0,.15);color:#fff;}
   .toast.success{background:#059669;}.toast.error{background:#dc2626;}.toast.info{background:var(--c1);}
   @keyframes tIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* 모바일 세로 리스트뷰 */
+  .list-view{display:none;}
+  .list-empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px;line-height:1.8;}
+  .list-day-group{margin-bottom:16px;}
+  .list-day-header{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:2px solid var(--border);margin-bottom:8px;}
+  .list-day-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;background:var(--surface2);color:var(--text2);flex-shrink:0;}
+  .list-day-num.today{background:var(--c1);color:#fff;}
+  .list-day-info{font-size:12px;color:var(--text2);font-weight:500;}
+  .list-day-info.sun{color:#ef4444;}.list-day-info.sat{color:#3b82f6;}
+  .list-task-card{background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:7px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+  .list-task-card:active{transform:scale(.98);}
+  .list-task-bar{width:4px;height:36px;border-radius:4px;flex-shrink:0;}
+  .list-task-card.t1 .list-task-bar{background:var(--c1);}
+  .list-task-card.t2 .list-task-bar{background:var(--c2);}
+  .list-task-card.t3 .list-task-bar{background:var(--c3);}
+  .list-task-card.t4 .list-task-bar{background:var(--c4);}
+  .list-task-info{flex:1;}
+  .list-task-team{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px;}
+  .list-task-content{font-size:14px;font-weight:600;color:var(--text);}
+  .list-add-btn{width:100%;padding:11px;background:var(--surface);border:2px dashed var(--border);border-radius:10px;color:var(--text3);font-size:13px;font-family:'Pretendard',sans-serif;cursor:pointer;transition:all .15s;margin-top:2px;}
+  .list-add-btn:active{border-color:var(--c1);color:var(--c1);}
+  .view-toggle{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;font-family:'Pretendard',sans-serif;display:none;align-items:center;gap:5px;white-space:nowrap;}
+  @media(max-width:500px){
+    .cal-view{display:none;}.list-view{display:block;}
+    .view-toggle{display:inline-flex;}
+    .legend{display:none;}
+    .main{padding:12px;}.header{padding:0 12px;}
+    .logo-sub{display:none;}.nav-btn span{display:none;}
+    .month-title{font-size:16px;}.mbtn{padding:5px 8px;font-size:11px;}
+  }
+
   @media(max-width:768px){
     .main{padding:14px;}.header{padding:0 14px;}
     .logo-sub{display:none;}.nav-btn span{display:none;}
@@ -159,23 +191,31 @@
   <div id="page-board" class="page active">
     <div class="month-nav">
       <div class="month-title" id="month-title"></div>
-      <div class="month-btns">
-        <button class="mbtn" onclick="moveMonth(-1)">← 이전달</button>
-        <button class="mbtn now" onclick="goNow()">이번달</button>
-        <button class="mbtn" onclick="moveMonth(1)">다음달 →</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="month-btns">
+          <button class="mbtn" onclick="moveMonth(-1)">← 이전달</button>
+          <button class="mbtn now" onclick="goNow()">이번달</button>
+          <button class="mbtn" onclick="moveMonth(1)">다음달 →</button>
+        </div>
+        <button class="view-toggle" id="view-toggle-btn" onclick="toggleView()">📋 목록보기</button>
       </div>
     </div>
     <div class="legend">
       <span class="legend-label">팀 필터:</span>
       <div id="legend-wrap"></div>
     </div>
-    <div class="cal">
-      <div class="cal-weekdays">
-        <div class="cal-wd sun">일</div><div class="cal-wd">월</div><div class="cal-wd">화</div>
-        <div class="cal-wd">수</div><div class="cal-wd">목</div><div class="cal-wd">금</div>
-        <div class="cal-wd sat">토</div>
+    <div class="cal-view" id="cal-view">
+      <div class="cal">
+        <div class="cal-weekdays">
+          <div class="cal-wd sun">일</div><div class="cal-wd">월</div><div class="cal-wd">화</div>
+          <div class="cal-wd">수</div><div class="cal-wd">목</div><div class="cal-wd">금</div>
+          <div class="cal-wd sat">토</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
       </div>
-      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="list-view" id="list-view">
+      <div id="list-grid"></div>
     </div>
   </div>
 
@@ -355,6 +395,7 @@ function renderCal(){
   for(let i=0;i<remain;i++) html+=`<div class="cal-cell empty"></div>`;
   document.getElementById('cal-grid').innerHTML=html;
   renderLegend();
+  renderList();
 }
 
 function renderLegend(){
@@ -461,6 +502,56 @@ document.getElementById('confirm-ok').onclick=()=>{if(confirmCb)confirmCb();clos
 document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
 
 function toast(msg,type='success'){const wrap=document.getElementById('toast-wrap');const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=`<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span><span>${msg}</span>`;wrap.appendChild(t);setTimeout(()=>t.remove(),3000);}
+
+
+let isListView = window.matchMedia('(max-width:500px)').matches;
+
+function applyView(){
+  const calView=document.getElementById('cal-view');
+  const listView=document.getElementById('list-view');
+  const btn=document.getElementById('view-toggle-btn');
+  if(isListView){
+    calView.style.display='none';
+    listView.style.display='block';
+    if(btn)btn.innerHTML='📅 달력보기';
+  } else {
+    calView.style.display='block';
+    listView.style.display='none';
+    if(btn)btn.innerHTML='📋 목록보기';
+  }
+}
+
+window.toggleView=function(){
+  isListView=!isListView;
+  applyView();
+  renderCal();
+}
+
+function renderList(){
+  applyView();
+  const lastDate=new Date(curYear,curMonth+1,0).getDate();
+  const today=todayStr();
+  const days=['일','월','화','수','목','금','토'];
+  let html='';let hasAny=false;
+  for(let d=1;d<=lastDate;d++){
+    const ds=dateStr(curYear,curMonth,d);
+    const dow=new Date(curYear,curMonth,d).getDay();
+    const dayTasks=Object.entries(tasks).filter(([k,v])=>v.date===ds&&activeTeams.has(v.teamId));
+    dayTasks.sort((a,b)=>TEAMS.findIndex(t=>t.id===a[1].teamId)-TEAMS.findIndex(t=>t.id===b[1].teamId));
+    if(dayTasks.length===0)continue;
+    hasAny=true;
+    const isToday=ds===today;
+    const dowCls=dow===0?'sun':dow===6?'sat':'';
+    html+=`<div class="list-day-group"><div class="list-day-header"><div class="list-day-num${isToday?' today':''}">${d}</div><div class="list-day-info ${dowCls}">${curYear}년 ${curMonth+1}월 ${d}일 (${days[dow]})</div></div>`;
+    dayTasks.forEach(([k,v])=>{
+      const team=TEAMS.find(t=>t.id===v.teamId);
+      html+=`<div class="list-task-card ${v.teamId}" onclick="openDetail('${k}',event)"><div class="list-task-bar"></div><div class="list-task-info"><div class="list-task-team">${team.name}</div><div class="list-task-content">${v.content}</div></div></div>`;
+    });
+    html+=`<button class="list-add-btn" onclick="openInput('${ds}')">＋ 이날 업무 추가</button></div>`;
+  }
+  if(!hasAny)html='<div class="list-empty">📭 이번달 등록된 업무가 없어요<br>날짜를 눌러 업무를 추가해보세요!</div>';
+  document.getElementById('list-grid').innerHTML=html;
+}
 
 renderTeamSelect();
 renderCal();
