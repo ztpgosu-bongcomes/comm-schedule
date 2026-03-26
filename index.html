@@ -291,16 +291,35 @@
       </div>
       <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
     </div>
-    <div id="detail-content" class="detail-content"></div>
-    <div class="memo-title">💬 메모</div>
-    <div class="memo-list" id="memo-list"></div>
-    <div class="memo-row">
-      <input type="text" class="form-input" id="memo-input" placeholder="메모 입력 후 Enter" onkeydown="if(event.key==='Enter')saveMemo()">
-      <button class="btn btn-primary btn-sm" onclick="saveMemo()">추가</button>
+    <!-- 보기 모드 -->
+    <div id="detail-view-mode">
+      <div id="detail-content" class="detail-content"></div>
+      <div class="memo-title">💬 메모</div>
+      <div class="memo-list" id="memo-list"></div>
+      <div class="memo-row">
+        <input type="text" class="form-input" id="memo-input" placeholder="메모 입력 후 Enter" onkeydown="if(event.key==='Enter')saveMemo()">
+        <button class="btn btn-primary btn-sm" onclick="saveMemo()">추가</button>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-primary btn-sm" onclick="startEdit()">✏️ 수정</button>
+        <button class="btn btn-del btn-sm" onclick="deleteTask()">🗑️ 삭제</button>
+        <button class="btn btn-ghost" onclick="closeModal('modal-detail')">닫기</button>
+      </div>
     </div>
-    <div class="modal-btns">
-      <button class="btn btn-del btn-sm" onclick="deleteTask()">🗑️ 삭제</button>
-      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">닫기</button>
+    <!-- 수정 모드 -->
+    <div id="detail-edit-mode" style="display:none">
+      <div class="form-group">
+        <label class="form-label">팀</label>
+        <select class="form-select" id="edit-team"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">사업명 / 업무 <span style="color:var(--text3);font-weight:400">(20자 이내)</span></label>
+        <input type="text" class="form-input" id="edit-content" maxlength="20">
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-primary" onclick="saveEdit()">✅ 저장</button>
+        <button class="btn btn-ghost" onclick="cancelEdit()">취소</button>
+      </div>
     </div>
   </div>
 </div>
@@ -462,6 +481,38 @@ window.deleteTask=function(){
     closeModal('modal-detail');
     toast('삭제되었습니다.','success');
   });
+}
+
+
+window.startEdit=function(){
+  const task=tasks[selKey];
+  if(!task)return;
+  document.getElementById('edit-team').innerHTML=TEAMS.map(t=>`<option value="${t.id}" ${t.id===task.teamId?'selected':''}>${t.name}</option>`).join('');
+  document.getElementById('edit-content').value=task.content;
+  document.getElementById('detail-view-mode').style.display='none';
+  document.getElementById('detail-edit-mode').style.display='block';
+}
+
+window.cancelEdit=function(){
+  document.getElementById('detail-view-mode').style.display='block';
+  document.getElementById('detail-edit-mode').style.display='none';
+}
+
+window.saveEdit=async function(){
+  const content=document.getElementById('edit-content').value.trim();
+  const teamId=document.getElementById('edit-team').value;
+  if(!content)return toast('업무명을 입력해주세요.','error');
+  const team=TEAMS.find(t=>t.id===teamId);
+  const task=tasks[selKey];
+  await set(ref(db,`comm_tasks/${selKey}`),{...task,teamId,teamName:team.name,content});
+  cancelEdit();
+  // 상세 모달 내용 업데이트
+  const colors={t1:'var(--c1)',t2:'var(--c2)',t3:'var(--c3)',t4:'var(--c4)'};
+  const badge=document.getElementById('detail-badge');
+  badge.className=`detail-badge ${team.cls}`;
+  badge.innerHTML=`<div style="width:8px;height:8px;border-radius:50%;background:${colors[teamId]}"></div>${team.name}`;
+  document.getElementById('detail-content').textContent=content;
+  toast('수정되었습니다!','success');
 }
 
 window.checkPw=function(){
