@@ -10,10 +10,10 @@
     --bg:#f0f2f8;--surface:#fff;--surface2:#f5f7fc;--border:#e4e8f2;
     --text:#1a1d2e;--text2:#6b7280;--text3:#c0c6d4;
     --shadow:0 2px 14px rgba(0,0,0,0.07);--radius:14px;
-    --c1:#3b82f6;--c1b:#eff6ff;--c1t:#1d4ed8;
-    --c2:#10b981;--c2b:#ecfdf5;--c2t:#065f46;
-    --c3:#f59e0b;--c3b:#fffbeb;--c3t:#92400e;
-    --c4:#8b5cf6;--c4b:#f5f3ff;--c4t:#5b21b6;
+    --c1:#2563eb;--c1b:#dbeafe;--c1t:#1e3a8a;
+    --c2:#059669;--c2b:#d1fae5;--c2t:#064e3b;
+    --c3:#d97706;--c3b:#fef3c7;--c3t:#78350f;
+    --c4:#374151;--c4b:#f3f4f6;--c4t:#111827;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
@@ -67,10 +67,10 @@
   .cal-cell:hover .add-hint{opacity:1;}
   .task-pill{display:flex;align-items:center;gap:3px;padding:3px 6px;border-radius:5px;margin-bottom:3px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
   .task-pill:hover{filter:brightness(.93);transform:translateY(-1px);}
-  .task-pill.t1{background:var(--c1b);color:var(--c1t);border-left:3px solid var(--c1);}
-  .task-pill.t2{background:var(--c2b);color:var(--c2t);border-left:3px solid var(--c2);}
-  .task-pill.t3{background:var(--c3b);color:var(--c3t);border-left:3px solid var(--c3);}
-  .task-pill.t4{background:var(--c4b);color:var(--c4t);border-left:3px solid var(--c4);}
+  .task-pill.t1{background:#bfdbfe;color:#1e3a8a;border-left:4px solid var(--c1);font-weight:700;}
+  .task-pill.t2{background:#a7f3d0;color:#064e3b;border-left:4px solid var(--c2);font-weight:700;}
+  .task-pill.t3{background:#fde68a;color:#78350f;border-left:4px solid var(--c3);font-weight:700;}
+  .task-pill.t4{background:#e5e7eb;color:#111827;border-left:4px solid var(--c4);font-weight:700;}
   .more-pill{font-size:10px;color:var(--text3);padding:1px 3px;}
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,17,30,.5);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
   .modal-bg.open{display:flex;}
@@ -274,6 +274,10 @@
       <label class="form-label">사업명 / 업무 * <span style="color:var(--text3);font-weight:400">(20자 이내 간단하게)</span></label>
       <input type="text" class="form-input" id="input-content" placeholder="예) 보도자료, 현장촬영, 기획회의" maxlength="20">
     </div>
+    <div class="form-group">
+      <label class="form-label">시작 시간 <span style="color:var(--text3);font-weight:400">(선택)</span></label>
+      <input type="time" class="form-input" id="input-time-start">
+    </div>
     <div class="modal-btns">
       <button class="btn btn-primary" onclick="saveTask()">✅ 등록</button>
       <button class="btn btn-ghost" onclick="closeModal('modal-input')">취소</button>
@@ -315,6 +319,10 @@
       <div class="form-group">
         <label class="form-label">사업명 / 업무 <span style="color:var(--text3);font-weight:400">(20자 이내)</span></label>
         <input type="text" class="form-input" id="edit-content" maxlength="20">
+      </div>
+      <div class="form-group">
+        <label class="form-label">시작 시간 <span style="color:var(--text3);font-weight:400">(선택)</span></label>
+        <input type="time" class="form-input" id="edit-time-start">
       </div>
       <div class="modal-btns">
         <button class="btn btn-primary" onclick="saveEdit()">✅ 저장</button>
@@ -405,7 +413,10 @@ function renderCal(){
     const dayTasks=Object.entries(tasks).filter(([k,v])=>v.date===ds&&activeTeams.has(v.teamId));
     dayTasks.sort((a,b)=>TEAMS.findIndex(t=>t.id===a[1].teamId)-TEAMS.findIndex(t=>t.id===b[1].teamId));
     const maxShow=3;
-    let pills=dayTasks.slice(0,maxShow).map(([k,v])=>`<div class="task-pill ${v.teamId}" onclick="openDetail('${k}',event)">${v.content}</div>`).join('');
+    let pills=dayTasks.slice(0,maxShow).map(([k,v])=>{
+      const timeStr=v.timeStart?`<span style="font-size:9px;opacity:.8;margin-left:2px;">⏰${v.timeStart.slice(0,5)}</span>`:'';
+      return `<div class="task-pill ${v.teamId}" onclick="openDetail('${k}',event)">${v.content}${timeStr}</div>`;
+    }).join('');
     if(dayTasks.length>maxShow) pills+=`<div class="more-pill">+${dayTasks.length-maxShow}개</div>`;
     html+=`<div class="cal-cell${cls}" onclick="openInput('${ds}')"><div class="day-num">${d}</div>${pills}<span class="add-hint">+</span></div>`;
   }
@@ -433,6 +444,7 @@ window.openInput=function(ds){
   selDate=ds;
   document.getElementById('input-date-display').value=fmtDisplay(ds);
   document.getElementById('input-content').value='';
+  document.getElementById('input-time-start').value='';
   openModal('modal-input');
   setTimeout(()=>document.getElementById('input-content').focus(),150);
 }
@@ -442,7 +454,8 @@ window.saveTask=async function(){
   const teamId=document.getElementById('input-team').value;
   if(!content)return toast('사업명/업무를 입력해주세요.','error');
   const team=TEAMS.find(t=>t.id===teamId);
-  await push(tasksRef,{date:selDate,teamId,teamName:team.name,content,ts:Date.now()});
+  const timeStart=document.getElementById('input-time-start').value||'';
+  await push(tasksRef,{date:selDate,teamId,teamName:team.name,content,timeStart,ts:Date.now()});
   closeModal('modal-input');
   toast(`${team.name} 업무 등록 완료!`,'success');
 }
@@ -458,7 +471,8 @@ window.openDetail=function(key,e){
   badge.className=`detail-badge ${team.cls}`;
   badge.innerHTML=`<div style="width:8px;height:8px;border-radius:50%;background:${colors[team.id]}"></div>${team.name}`;
   document.getElementById('detail-date').textContent=fmtDisplay(task.date);
-  document.getElementById('detail-content').textContent=task.content;
+  const timeStr=task.timeStart?` ⏰ ${task.timeStart.slice(0,5)}` :'';
+  document.getElementById('detail-content').innerHTML=`<div>${task.content}</div>${timeStr?`<div style="font-size:13px;color:var(--text2);margin-top:6px;font-weight:500;">${timeStr}</div>`:''}`;
   const memos=task.memos?Object.values(task.memos).sort((a,b)=>a.ts-b.ts):[];
   document.getElementById('memo-list').innerHTML=memos.length
     ?memos.map(m=>`<div class="memo-item">${m.text}<div class="memo-time">${new Date(m.ts).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div></div>`).join('')
@@ -489,6 +503,7 @@ window.startEdit=function(){
   if(!task)return;
   document.getElementById('edit-team').innerHTML=TEAMS.map(t=>`<option value="${t.id}" ${t.id===task.teamId?'selected':''}>${t.name}</option>`).join('');
   document.getElementById('edit-content').value=task.content;
+  document.getElementById('edit-time-start').value=task.timeStart||'';
   document.getElementById('detail-view-mode').style.display='none';
   document.getElementById('detail-edit-mode').style.display='block';
 }
@@ -504,14 +519,15 @@ window.saveEdit=async function(){
   if(!content)return toast('업무명을 입력해주세요.','error');
   const team=TEAMS.find(t=>t.id===teamId);
   const task=tasks[selKey];
-  await set(ref(db,`comm_tasks/${selKey}`),{...task,teamId,teamName:team.name,content});
+  const editTimeStart=document.getElementById('edit-time-start').value||'';
+  await set(ref(db,`comm_tasks/${selKey}`),{...task,teamId,teamName:team.name,content,timeStart:editTimeStart});
   cancelEdit();
-  // 상세 모달 내용 업데이트
   const colors={t1:'var(--c1)',t2:'var(--c2)',t3:'var(--c3)',t4:'var(--c4)'};
   const badge=document.getElementById('detail-badge');
   badge.className=`detail-badge ${team.cls}`;
   badge.innerHTML=`<div style="width:8px;height:8px;border-radius:50%;background:${colors[teamId]}"></div>${team.name}`;
-  document.getElementById('detail-content').textContent=content;
+  const timeStr2=editTimeStart?` ⏰ ${editTimeStart.slice(0,5)}` :'';
+  document.getElementById('detail-content').innerHTML=`<div>${content}</div>${timeStr2?`<div style="font-size:13px;color:var(--text2);margin-top:6px;font-weight:500;">${timeStr2}</div>`:''}`;
   toast('수정되었습니다!','success');
 }
 
@@ -596,7 +612,8 @@ function renderList(){
     html+=`<div class="list-day-group"><div class="list-day-header"><div class="list-day-num${isToday?' today':''}">${d}</div><div class="list-day-info ${dowCls}">${curYear}년 ${curMonth+1}월 ${d}일 (${days[dow]})</div></div>`;
     dayTasks.forEach(([k,v])=>{
       const team=TEAMS.find(t=>t.id===v.teamId);
-      html+=`<div class="list-task-card ${v.teamId}" onclick="openDetail('${k}',event)"><div class="list-task-bar"></div><div class="list-task-info"><div class="list-task-team">${team.name}</div><div class="list-task-content">${v.content}</div></div></div>`;
+      const lt=v.timeStart?`<div style="font-size:11px;color:var(--text2);margin-top:2px;">⏰ ${v.timeStart.slice(0,5)}</div>`:'';
+      html+=`<div class="list-task-card ${v.teamId}" onclick="openDetail('${k}',event)"><div class="list-task-bar"></div><div class="list-task-info"><div class="list-task-team">${team.name}</div><div class="list-task-content">${v.content}</div>${lt}</div></div>`;
     });
     html+=`<button class="list-add-btn" onclick="openInput('${ds}')">＋ 이날 업무 추가</button></div>`;
   }
